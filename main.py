@@ -13,6 +13,8 @@ from dotenv import load_dotenv
 
 from handlers import start, chat, profile
 
+from services.db import init_db
+
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -39,6 +41,8 @@ dp.include_router(profile.router)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+
+    await init_db()
 
     await bot.set_webhook(WEBHOOK_URL)
 
