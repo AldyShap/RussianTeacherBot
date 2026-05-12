@@ -1,30 +1,61 @@
-from aiogram import Bot, Dispatcher
-from aiogram.enums import ParseMode
-from aiogram.client.default import DefaultBotProperties
-from aiogram.fsm.storage.memory import MemoryStorage
-from dotenv import load_dotenv
-import asyncio
 import os
 
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, Request
+
+from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
+
+from dotenv import load_dotenv
+
 from handlers import start, chat, profile
-from services.db import init_db
 
 load_dotenv()
 
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+
 bot = Bot(
-    token=os.getenv("BOT_TOKEN"),
-    default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+    token=BOT_TOKEN,
+    default=DefaultBotProperties(
+        parse_mode=ParseMode.HTML
+    )
 )
 
-dp = Dispatcher(storage=MemoryStorage())
+dp = Dispatcher()
 
 dp.include_router(start.router)
 dp.include_router(chat.router)
 dp.include_router(profile.router)
 
-async def main():
-    await init_db()
-    await dp.start_polling(bot)
+WEBHOOK_PATH = "/webhook"
 
-if __name__ == "__main__":
-    asyncio.run(main())
+WEBHOOK_URL = (
+    "https://YOUR-APP.onrender.com/webhook"
+)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+
+    await bot.set_webhook(WEBHOOK_URL)
+
+    print("Webhook set!")
+
+    yield
+
+    await bot.delete_webhook()
+
+
+app = FastAPI(lifespan=lifespan)
+
+
+@app.post(WEBHOOK_PATH)
+async def webhook(request: Request):
+
+    data = await request.json()
+
+    await dp.feed_raw_update(bot, data)
+
+    return {"ok": True}

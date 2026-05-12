@@ -2,3 +2,5 @@ aiogram
 aiosqlite
 httpx
 python-dotenv
+fastapi
+uvicorn
