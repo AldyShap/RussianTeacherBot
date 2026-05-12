@@ -32,7 +32,7 @@ dp.include_router(profile.router)
 WEBHOOK_PATH = "/webhook"
 
 WEBHOOK_URL = (
-    "https://YOUR-APP.onrender.com/webhook"
+    "https://russianteacherbot-mxzt.onrender.com/webhook"
 )
 
 
