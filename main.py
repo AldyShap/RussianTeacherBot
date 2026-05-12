@@ -1,4 +1,5 @@
 import os
+import asyncio
 
 from contextlib import asynccontextmanager
 
@@ -8,6 +9,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.types import Update
+from aiogram.fsm.storage.memory import MemoryStorage
 
 from dotenv import load_dotenv
 
@@ -32,7 +34,9 @@ bot = Bot(
     )
 )
 
-dp = Dispatcher()
+dp = Dispatcher(
+    storage=MemoryStorage()
+)
 
 dp.include_router(start.router)
 dp.include_router(chat.router)
@@ -71,6 +75,8 @@ async def webhook(request: Request):
 
     update = Update.model_validate(data)
 
-    await dp.feed_update(bot, update)
+    asyncio.create_task(
+        dp.feed_update(bot, update)
+    )
 
     return {"ok": True}
