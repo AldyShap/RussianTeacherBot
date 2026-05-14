@@ -1,5 +1,6 @@
 import os
 import asyncio
+import traceback
 
 from contextlib import asynccontextmanager
 
@@ -63,20 +64,27 @@ app = FastAPI(lifespan=lifespan)
 @app.get("/")
 async def root():
 
-    return {
-        "status": "ok"
-    }
+    return "ok"
 
 
 @app.post(WEBHOOK_PATH)
 async def webhook(request: Request):
 
-    data = await request.json()
+    try:
 
-    update = Update.model_validate(data)
+        data = await request.json()
 
-    asyncio.create_task(
-        dp.feed_update(bot, update)
-    )
+        update = Update.model_validate(data)
 
-    return {"ok": True}
+        asyncio.create_task(
+            dp.feed_update(bot, update)
+        )
+
+        return {"ok": True}
+
+    except Exception as e:
+
+        print("WEBHOOK ERROR:")
+        print(traceback.format_exc())
+
+        return {"error": str(e)}
